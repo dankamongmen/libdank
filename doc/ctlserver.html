@@ -1,0 +1,81 @@
+<html>
+ <head>
+  <title>Interface and Implementation of ctlserver</title>
+ </head>
+ <body>
+  <h2>Interface and Implementation of ctlserver</h2>
+  <ol>
+   <li>
+   	<h4>Overview</h4>
+	Any program calling app_init() with an app_ctx structure having a
+	non-NULL value for its ctlsrvsocket field will launch a ctlserver
+	thread, which will be automatically cleaned up in app_stop(). Failures
+	while setting up the ctlserver will be noted in app_init()'s return
+	value, but will not halt app_init(). If the ctlserver is to be used,
+	all source files to be linked must be compiled with threading support.
+   	<br><br>
+	The calling process will attempt to bind and listen on the named pipe
+	specified by ctlsrvsocket, relative to the application's chroot. A
+	failure will not lead to retry; no ctlserver will be available
+	(<b>FIXME</b> -- see note in init_ctlserver()). If these operations
+	succeed, the ctlserver thread will be spawned with this socket as its
+	argument.
+   	<br><br>
+	Each connection will see a ctldrone thread spawned to handle the
+	resulting socket descriptor. There is currently no internal limit on
+	ctldrone spawning (<b>FIXME</b>).
+   	<br><br>
+   </li>
+   <li>
+   	<h4>Role</h4>
+	ctlserver is a pluggable component in the app framework, and a
+	transport protocol extending SCM_RIGHTS-capable sockets to allow full
+	stdio muxing.
+	<br><br>
+	It provides *no application layer services*. Most importantly, the
+	ctlserver protocol has no concept of a command's "success" or
+	"failure". This is done purposefully -- otherwise we'd want to rollback
+	changes whose successful application wasn't confirmed with the UI, and
+	down that path lies madness.
+	<br><br>
+	ctlserver operates over SOCK_STREAM (connection-oriented) sockets only.
+	The SOCK_SEQPACKET type is an interesting one to consider, but it is
+	currently not acceptably portable.
+	<br><br>
+   </li>
+   <li>
+   	<h4>Protocol</h4>
+	Upon connecting to the ctlserver, the client must send a file
+	descriptor using the SCM_RIGHTS ancillary message type. Data read from
+	the server over the primary connection should be mapped to stdout; data
+	read from the passed file descriptor should be mapped to stderr. This
+	is done most simply by passing the result of fileno(stderr), after
+	having verified it as non-negative.
+	<br><br>
+	SCM_RIGHTS transfers over SOCK_STREAM PF_UNIX sockets require at least
+	one ancillary byte of data. Four octets shall be sent, these being the
+	protocol version in network byte order. Protocol version disagreements
+	should result in both parties' immediate termination of the connection,
+	and generation of a diagnostic.
+	<br><br>
+	Any failure at the transport level should result in immediate
+	termination of the connection by both parties; the stderr channel is
+	for application-layer error data only. Shutdown requests directed to
+	the client or server should result in termination of all connections
+	and no further transmissions.
+	<br><br>
+	After passing the file descriptor, the client shall send a command and
+	its associated data. The command is the first message to arrive --
+	remember, UNIX sockets preserve message boundaries. This is followed by
+	the data, in any number of messages. Data length is bounded by
+	available memory only. Follow the data with an EOF. Any 8-bit data may
+	be transmitted.
+	<br><br>
+	The server might reply with 8-bit data on either or both of the
+	descriptors. Output on either file descriptor is unterminated; read
+	until EOF.
+	<br><br>
+   </li>
+  </ol>
+ </body>
+</html>

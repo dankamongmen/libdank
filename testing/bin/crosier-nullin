@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Indent all output one space, conforming to unittest output formatting
+../.out/bin/crosier $* < /dev/null | sed -e 's/^/ /' 2>&1
+echo

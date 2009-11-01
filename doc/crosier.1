@@ -1,0 +1,19 @@
+.TH crosier 1 "2008-07-16"
+
+.SH NAME
+crosier \- Open a connection to a libdank(3) ctlserver
+
+.SH SYNOPSIS
+.B crosier
+
+.SH DESCRIPTION
+Applications making use of the libdank(3) ctlserver interface accept PF_UNIX
+connections over a named pipe, providing a full-duplex stdio channel along
+with a half-duplex stderr channel. crosier connects to such a pipe, sends the
+specified data using the ctlserver protocol, and writes the output to stdout
+and stderr.
+
+.SH NOTES
+
+.SH SEE ALSO
+dank(3dank), unix(7)

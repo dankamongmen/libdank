@@ -1,0 +1,69 @@
+#!/bin/sh
+
+# FIXME add something using ipmitool where applicable
+
+set -e || { echo "Couldn't set -e; exiting" >&2 ; exit 1 ; }
+set -o nounset || { echo "Couldn't set -e; exiting" >&2 ; exit 1 ; }
+
+DEPS="acpidump dmidecode biosdecode lspci lsusb x86info cpufreq-info"
+DEPS="$DEPS lsscsi superiotool lsinput i2cdetect decode-dimms"
+DEPS="$DEPS dumpSmbios dumpCmos ddcprobe systool getSystemId"
+
+for i in $DEPS ; do
+	which $i > /dev/null || { echo "Please acquire the '$i' program; exiting" >&2 ; exit 1 ; }
+done
+
+MODDEPS="cpuid msr"
+
+# what if they're built into the kernel? FIXME
+for i in $MODDEPS ; do
+	lsmod | grep "$i" > /dev/null || echo "Warning! Load the '$i' module if it isn't built into the kernel" >&2
+done
+
+# Accept a DSDT from the command line? Use -f if we ever do...
+sudo acpidump
+
+sudo dmidecode
+sudo biosdecode
+
+sudo lspci -vv
+sudo lsusb -v
+
+sudo x86info -a -mp -s -v
+
+sudo cpufreq-info -e
+
+lsscsi -H -L
+lsscsi -v -L -g
+
+# Check for Super I/O (Southbridge PS/2, COM, LPT control)
+sudo superiotool --dump --extra-dump --verbose
+
+# Input devices
+sudo lsinput
+
+# Argument: i2c bus to examine (usually just an integer; see i2cdetect -F)
+examine_i2c () {
+	sudo i2cdetect -F "$1"
+	sudo i2cdetect -y "$1"
+}
+
+# i2c
+i2cdetect -l
+for i in `i2cdetect -l | cut -d- -f2 | cut -f1` ; do
+	examine_i2c "$i"
+done
+
+# SPD over i2c. Requires the eeprom module.
+sudo decode-dimms
+
+# All of this works over SMBus (mostly a subset of i2c)
+sudo dumpSmbios
+sudo dumpCmos
+sudo getSystemId
+
+# Monitor via DDC (an i2c-like bus from VESA)
+sudo ddcprobe
+
+# From sysfsutils. Surely there's a better methodology...FIXME
+systool

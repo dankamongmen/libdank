@@ -1,0 +1,46 @@
+.TH cunit 1 "2008-07-23"
+
+.SH NAME
+cunit \- Extensible unit testing application from libdank
+
+.SH SYNOPSIS
+.B cunit [ -o object ] [ -b iterations ] [ -f ] [ -c datadir ] [ -v ] [ -a | testnames ]
+
+.SH DESCRIPTION
+cunit can be used to verify that libdank(3) works largely as expected on a
+given system. Additionally, it can be extended by applications to perform unit
+testing; create a shared object containing the identifier CUNIT_EXTENSIONS,
+having type const char *[]; this is a NULL-terminated list of C strings, each
+corresponding to an identifier having type const declared_test []. See the
+example-cunit-extension/extension.c file from libdank/src for more information.
+
+.SH OPTIONS
+.PP
+Run the tests specified, or all if the \-a option is given.
+.TP
+\fB\-a\fR
+Run all tests.
+.TP
+\fB\-f\fR
+Test failure paths. For each type of failure covered (currently allocations
+only, but it is intended to include system calls and library calls), test
+each failure case iteratively. This will only be applied to tests expecting
+to succeed. First, cunit verifies that a test succeeds in the usual case. The
+applicable subsystem is then configured to fail after N operations, where N is
+initialized to 1. So long as the test returns failure, cunit will increase N,
+reconfigure the subsystem, and test again. Eventually, N should reach the
+number of requests necessary for the common (successful) case, the test should
+return success, and the iteration terminates. This is incredibly useful for
+finding obscure errors on rarely-tested failure paths.
+.TP
+\fB\-b\fR
+Benchmark.
+.PP
+Additionally, all options handled by libdank applications (see dank(3)) are
+accepted and handled by cunit.
+
+.SH NOTES
+The CUNIT_EXTENSIONS identifier must not be declared static.
+
+.SH SEE ALSO
+dank(3dank), ld(1), dlopen(3)

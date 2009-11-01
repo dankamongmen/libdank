@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# Generate lookup tables used within libdank/magic.[ch].
+
+set -e || { echo "Couldn't set -e; exiting" >&2 ; exit 1 ; }
+set -o nounset || { echo "Couldn't set -o nounset; exiting" >&2 ; exit 1 ; }
+set -o pipefail || { echo "Couldn't set -o pipefail; exiting" >&2 ; exit 1 ; }
+
+SEQ="`which seq 2> /dev/null || which gseq 2> /dev/null`" || { echo "Couldn't find GNU seq; exiting" >&2 ; exit 1 ; }
+
+echo "// Generated via $0 on `date`"
+echo
+
+# If seq is failing, we'll get empty forloop domains. Bash doesn't error out on
+# such things, so we need to ensure seq is working ourselves....bleh. After
+# each loop, ensure the index variable is equal to the terminating value.
+checkloopindex () {
+	[ $# -eq 2 ] || { echo "Parameter error in checkloopindex" >&2 ; return 1 ; }
+	[ $1 -eq $2 ] || { echo "Loop postcondition assertion failure" >&2 ; return 1 ; }
+}
+
+WBITS=64
+TSIZE=67
+TLINE=16 # Number to output per line
+for i in `$SEQ 0 $((TSIZE - 1))` ; do
+	POW2[$i]=127
+done
+checkloopindex $i $((TSIZE - 1))
+for i in `$SEQ 0 $((WBITS - 1))` ; do
+	IDX="`echo 2 ^ $i % $TSIZE | bc`"
+	POW2[$IDX]=$i
+done
+checkloopindex $i $((WBITS - 1))
+
+cat <<POW2
+// For a word having exactly one bit set high, finding the position of that bit
+// is equivalent to solving the logarithm base 2 of the word. The
+// multiplicative group in any finite field is cyclic, and integers mod p where
+// p is prime form a finite field. If we select a prime larger than our word
+// size, for which 2 is a generator, an array sized in roughly linear
+// proportion with the word length can be used as a precomputed lookup table
+// for this solution. Otherwise (without hardware support) we require the naive
+// O(N) shift-and-mask algorithm or O(lgN) divide-and-conquer shift-and-or
+// algorithm. We can extend to 128 or 256 bits, for example, with 131 or 269.
+
+static const uint8_t pow2table[$TSIZE] = {
+POW2
+for i in `$SEQ 0 $(((TSIZE - 1) / TLINE))` ; do
+	echo -ne "\t"
+	if [ $i -eq $((TSIZE / TLINE)) ] ; then
+		TLINE=$((TSIZE % TLINE))
+	fi
+	for j in `$SEQ 0 $((TLINE - 1))` ; do
+		# DO NOT replace this 16 with TLINE, as it is reassigned in the
+		# previous conditional, but the arithmetics remain the same!
+		echo -n "${POW2[i * 16 + j]}, "
+	done
+	checkloopindex $j $((TLINE - 1))
+	echo
+done
+echo "};"

@@ -1,0 +1,223 @@
+Index: libdank/objects/slalloc.c
+===================================================================
+--- libdank/objects/slalloc.c	(revision 755)
++++ libdank/objects/slalloc.c	(working copy)
+@@ -8,19 +8,19 @@
+ // FIXME we've got to get rid of all the calls to getpagesize() sprinkled
+ // through here; it leads to massive syscall count hits and is stupid...
+ 
+-typedef struct pgdata {
++typedef struct blkdata {
+ 	unsigned char *usemap;
+ 	unsigned unallocated;
+-	struct pgdata *next_nonfull;
+-} pgdata;
++	struct blkdata *next_nonfull;
++} blkdata;
+ 
+ // We ought separate invariant initialization and per-use initialization into
+ // distinct logics via the API...
+ typedef struct slalloc {
+-	unsigned pagecount;
++	unsigned blkcount;
+ 	void **pgarray;
+-	pgdata *usemaps,*nonfull_usemaps;
+-	unsigned objsperpage;
++	blkdata *usemaps,*nonfull_usemaps;
++	unsigned pagesperblock,objsperpage;
+ 	size_t objsize;
+ } slalloc;
+ 
+@@ -30,61 +30,75 @@
+ 
+ // FIXME i'd really like this to be O(1) or at the very least O(lgN), PoC
+ static unsigned
+-find_page_idx(const slalloc *sl,const void *obj){
++find_block_idx(const slalloc *sl,const void *obj){
+ 	unsigned z = 0;
+ 	int pgsize;
+ 
+ 	pgsize = Getpagesize(); // FIXME
+ 	while((const char *)obj < (const char *)sl->pgarray[z] ||
+-		(const char *)obj >= (const char *)sl->pgarray[z] + pgsize){
++		(const char *)obj >= (const char *)sl->pgarray[z]
++			+ sl->pagesperblock * pgsize){
+ 		++z;
+ 	}
+ 	return z;
+ }
+ 
+ static inline ptrdiff_t
+-pgdata_idx(const slalloc *sl,const pgdata *pd){
+-	return pd - sl->usemaps;
++blkdata_idx(const slalloc *sl,const blkdata *bd){
++	return bd - sl->usemaps;
+ }
+ 
+ static int
+-init_usemap(slalloc *sl,pgdata *pd){
+-	if((pd->usemap = Malloc("usemap",sl->objsperpage / CHAR_BIT + 
+-			!!(sl->objsperpage % CHAR_BIT))) == NULL){
++init_usemap(slalloc *sl,blkdata *bd){
++	size_t s;
++
++	s = sl->objsperpage * sl->pagesperblock / CHAR_BIT
++		+ !!(sl->objsperpage * sl->pagesperblock % CHAR_BIT);
++	if((bd->usemap = Malloc("usemap",s)) == NULL){
+ 		return -1;
+ 	}
+-	pd->unallocated = sl->objsperpage;
+-	pd->next_nonfull = sl->nonfull_usemaps;
+-	sl->nonfull_usemaps = pd;
++	bd->unallocated = sl->objsperpage * sl->pagesperblock;
++	bd->next_nonfull = sl->nonfull_usemaps;
++	sl->nonfull_usemaps = bd;
+ 	return 0;
+ }
+ 
+ static inline void
+-reset_usemap(pgdata *pd){
+-	if(pd){
+-		Free(pd->usemap);
++reset_usemap(blkdata *bd){
++	if(bd){
++		Free(bd->usemap);
+ 	}
+ }
+ 
+ static void *
+ take_first_unused(slalloc *sl){
+ 	void *ret = NULL;
+-	pgdata *map;
++	blkdata *map;
+ 
+ 	if( (map = sl->nonfull_usemaps) ){
+-		unsigned z,mask = 0xf0U;
++		void *page = sl->pgarray[blkdata_idx(sl,map)];
++		unsigned p,mask = 0xf0U;
++		int pgsiz;
+ 
+-		for(z = 0 ; z < sl->objsperpage ; ++z){
+-			if((map->usemap[z / CHAR_BIT] & mask) == 0){
+-				map->usemap[z / CHAR_BIT] |= mask;
+-				if(--map->unallocated == 0){
+-					sl->nonfull_usemaps = map->next_nonfull;
++		if((pgsiz = Getpagesize()) < 0){ // FIXME factor out
++			return NULL;
++		}
++		for(p = 0 ; p < sl->pagesperblock ; ++p){
++			unsigned z;
++
++			for(z = p * sl->objsperpage ; z < (p + 1) * sl->objsperpage ; ++z){
++				if((map->usemap[z / CHAR_BIT] & mask) == 0){
++					map->usemap[z / CHAR_BIT] |= mask;
++					if(--map->unallocated == 0){
++						sl->nonfull_usemaps = map->next_nonfull;
++					}
++					return (char *)page + z * sl->objsize;
+ 				}
+-				return (char *)sl->pgarray[pgdata_idx(sl,map)] + z * sl->objsize;
++				if((mask >>= 1u) == 0){
++					mask = 0xf0U;
++				}
+ 			}
+-			if((mask >>= 1u) == 0){
+-				mask = 0xf0U;
+-			}
++			page = (char *)page + pgsiz;
+ 		}
+ 	}
+ 	return ret;
+@@ -159,7 +173,15 @@
+ 			if(objsize <= (unsigned)pgsiz){
+ 				if( (ret = Malloc("slalloc",sizeof(*ret))) ){
+ 					ret->objsize = objsize;
++					// Don't allow objects to cross page boundaries
+ 					ret->objsperpage = (unsigned)pgsiz / ret->objsize;
++					// How many pages per block? This affects allocation
++					// negatively (O(1) == O(ppb * opp)), and deallocation
++					// positively (O(N) == O(pages / ppb) == O(blocks). It
++					// affects fragmentation positively, but decreases
++					// robustness in the face of fragmentation (we could work
++					// around this by making pagesperblock a per-block var).
++					ret->pagesperblock = 4u;
+ 				}
+ 			}else{
+ 				bitch("Won't slabcache objects larger than page (%zu > %d)\n",objsize,pgsiz);
+@@ -175,8 +197,8 @@
+ 	if(sl){
+ 		unsigned z;
+ 
+-		for(z = 0 ; z < sl->pagecount ; ++z){
+-			return_contiguous_pages(sl->pgarray[z],1);
++		for(z = 0 ; z < sl->blkcount ; ++z){
++			return_contiguous_pages(sl->pgarray[z],sl->pagesperblock);
+ 			reset_usemap(&sl->usemaps[z]);
+ 		}
+ 		Free(sl->pgarray);
+@@ -192,8 +214,8 @@
+ 	size_t pgarrays,usemapss;
+ 	void *newpage;
+ 
+-	pgarrays = sizeof(*sl->pgarray) * (sl->pagecount + 1);
+-	usemapss = sizeof(*sl->usemaps) * (sl->pagecount + 1);
++	pgarrays = sizeof(*sl->pgarray) * (sl->blkcount + 1);
++	usemapss = sizeof(*sl->usemaps) * (sl->blkcount + 1);
+ 	if((tmppgarray = Realloc("page array",sl->pgarray,pgarrays)) == NULL){
+ 		return -1;
+ 	}
+@@ -202,15 +224,20 @@
+ 		return -1;
+ 	}
+ 	sl->usemaps = tmpusemaps;
+-	if(init_usemap(sl,&tmpusemaps[sl->pagecount])){
++	if(init_usemap(sl,&tmpusemaps[sl->blkcount])){
+ 		return -1;
+ 	}
++	/* FIXME use this upon per-block pagesperblock variable
+ 	if((newpage = fistful_of_pages(0)) == NULL){
+-		reset_usemap(&tmpusemaps[sl->pagecount]);
++		reset_usemap(&tmpusemaps[sl->blkcount]);
+ 		return -1;
++	} */
++	if((newpage = snatch_contiguous_pages(sl->pagesperblock)) == NULL){
++		reset_usemap(&tmpusemaps[sl->blkcount]);
++		return -1;
+ 	}
+-	sl->pgarray[sl->pagecount] = newpage;
+-	++sl->pagecount;
++	sl->pgarray[sl->blkcount] = newpage;
++	++sl->blkcount;
+ 	return 0;
+ }
+ 
+@@ -230,9 +257,13 @@
+ // O(P) on the number of pages P
+ int slalloc_free(slalloc *sl,void *obj){
+ 	unsigned idx,objidx,mapidx,mask;
++	size_t distance;
++	int pgsiz;
+ 
+-	idx = find_page_idx(sl,obj);
+-	objidx = ((const char *)obj - (const char *)sl->pgarray[idx]) / sl->objsize;
++	pgsiz = Getpagesize(); // FIXME
++	idx = find_block_idx(sl,obj);
++	distance = ((const char *)obj - (const char *)sl->pgarray[idx]);
++	objidx = (distance / pgsiz * sl->objsperpage) + (distance / sl->objsize);
+ 	mapidx = objidx / CHAR_BIT;
+ 	mask = ~(0xf0U >> (objidx % CHAR_BIT));
+ 	sl->usemaps[idx].usemap[mapidx] &= mask;
+@@ -253,9 +284,12 @@
+ 	if(printUString(u,"<objsize>%zu</objsize>",sl->objsize) < 0){
+ 		return -1;
+ 	}
+-	if(printUString(u,"<pages>%u</pages>",sl->pagecount) < 0){
++	if(printUString(u,"<blocks>%u</blocks>",sl->blkcount) < 0){
+ 		return -1;
+ 	}
++	if(printUString(u,"<pagesperblock>%u</pagesperblock>",sl->pagesperblock) < 0){
++		return -1;
++	}
+ 	if(printUString(u,"<objsperpage>%u</objsperpage>",sl->objsperpage) < 0){
+ 		return -1;
+ 	}

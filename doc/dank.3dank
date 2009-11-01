@@ -1,0 +1,15 @@
+.TH dank 3dank "2008-07-16"
+
+.SH NAME
+dank \- Libdank, exceedingly dank C utility functions
+
+.SH SYNOPSIS
+.B #include <libdank.h>
+
+.SH DESCRIPTION
+Toke as needed.
+
+.SH NOTES
+
+.SH SEE ALSO
+events(3dank)

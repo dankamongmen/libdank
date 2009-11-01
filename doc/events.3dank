@@ -1,0 +1,14 @@
+.TH events 3dank "2009-08-10"
+
+.SH NAME
+events \- Libdank's event-handling capabilities
+
+.SH SYNOPSIS
+.B #include <libdank/modules/events/evcore.h>
+
+.SH DESCRIPTION
+
+.SH NOTES
+
+.SH SEE ALSO
+dank(3dank)

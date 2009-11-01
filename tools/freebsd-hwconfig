@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e || { echo "Couldn't set -e; exiting" >&2 ; exit 1 ; }
+set -o nounset || { echo "Couldn't set -e; exiting" >&2 ; exit 1 ; }
+
+PACKAGE_DEPS="devcpu mbmon pciutils dmidecode"
+
+for i in $PACKAGE_DEPS ; do
+	pkg_info -E $i\* > /dev/null || { echo "Please install package $i; exiting" >&2 ; exit 1 ; }
+done
+
+# On error, try mptable -grope, but only if user approves
+sudo mptable || true
+
+# Accept a DSDT from the command line? Use -f if we ever do...
+sudo acpidump -d -t
+
+sudo dmidecode
+sudo biosdecode
+
+lsvfs
+
+# FIXME x86info currently only packages for i386
+#sudo x86info -a -mp -s -v
+
+# Don't use the -A access method with mbmon; a failure in one can prevent
+# others from running (seen with ichsmb)
+
+# First, try the ISA bus
+sudo mbmon -I -r -c 1 || echo "Reading motherboard settings via ISA bus failed!" >&2
+
+# Now try from SMBus
+sudo mbmon -S -r -c 1 || echo "Reading motherboard settings via SMBus failed!" >&2
+
+sudo usbdevs -v -d
+
+sudo lspci -vv

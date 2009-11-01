@@ -1,0 +1,11 @@
+prefix=/usr/local		# FIXME write from makefile
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libdank
+Description: Utility library for rapid development of C applications
+Version: 1.3			# FIXME write from makefile
+URL: http://dank.qemfd.net/dankwiki/index.php/Libdank
+Requires: libxml-2.0, libssl
+Libs: -Wl,-R${libdir} -L${libdir} -ldank
+Cflags: -I${includedir}

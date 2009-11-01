@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -e || exit 1
+set -o nounset
+set -o pipefail
+
+RUNX11=""
+
+verifydeps () {
+	for i in "$@" ; do
+		which "$i" > /dev/null 2>&1 || \
+		 { echo "Please acquire the $i program; exiting." >&2 ; return 1 ; }
+	done
+}
+
+DEPS="openssl"
+XDEPS="glxgears x11perf"
+
+usage () { echo "usage: `basename $0` [ -x11 ]" ; }
+usageerr () { usage >&2 ; return 1 ; }
+
+[ $# -lt 2 ] || usageerr
+
+verifydeps $DEPS
+
+if [ $# -eq 1 ] ; then
+	[ "$1" = "-x11" ] || usageerr
+	verifydeps $XDEPS
+	RUNX11="$1"
+fi
+
+if [ -n "$RUNX11" ] ; then
+	x11perf -aa10text
+	glxgears -info
+fi
+
+openssl version
+openssl speed

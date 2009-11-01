@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -e || { echo "Couldn't set -e; exiting" >&2 ; exit 1 ; }
+set -o nounset || { echo "Couldn't set -o nounset; exiting" >&2 ; exit 1 ; }
+set -o pipefail || { echo "Couldn't set -o pipefail; exiting" >&2 ; exit 1 ; }
+
+umask 0022
+
+for i in svnversion md5 sha256 ; do
+	which $i > /dev/null || { echo "Couldn't find $i; exiting" >&2 ; exit 1 ; }
+done
+
+SVNVER=`svnversion`
+if echo $SVNVER | grep '[M:]' > /dev/null ; then
+	echo "Will not publish a modified or split working copy; exiting" >&2
+	exit 1
+fi
+svn-clean
+
+usage () { echo "usage: `basename $0` versionstr newportspath" ; }
+usageerr () { usage >&2 ; exit 1 ; }
+
+[ $# -eq 2 ] || usageerr
+
+VERSION="$1"
+NEWPORTS="$2"
+
+# Need testing/ because package build will run unit tests, doc/ for man pages
+TARFILES="GNUmakefile doc libdank src testing tools .svn"
+
+OUT=`mktemp -t \`basename $0\``
+# Do not filter out .svn directories, or else svnversion/make clean break!
+# Same with packaging/, etc; it fouls up svnversion.
+echo "Assembling $OUT..."
+tar cz -f"$OUT" $TARFILES
+chmod 644 "$OUT"
+
+TARGHOST=svn.research.sys
+TARGDIR=/var/www/libdank/
+TARGOUT="libdank-$VERSION.tar.gz"
+
+# FIXME use ssh config file
+scp -p -q -2 -B "$OUT" "$TARGHOST:$TARGDIR$TARGOUT"
+
+( echo "MD5 ($TARGOUT) = `md5 -q $OUT`" ; \
+  echo "SHA256 ($TARGOUT) = `sha256 -q $OUT`" ; \
+  echo "SIZE ($TARGOUT) = `stat  -f '%z' $OUT`" ) > "$NEWPORTS/distinfo"
+
+echo "Removing $OUT,,,"
+rm "$OUT"
+
+# FIXME all of this is terrible
+cd "$NEWPORTS"
+echo "Generated new distinfo:"
+svn diff distinfo
+
+echo "Testing new distinfo..."
+sudo make distclean
+sudo make fetch
+
+# Need update DIST_VERSION line in Makefile on file name change!
+svn commit -m "Committing new distinfo as part of `basename $0`" distinfo Makefile
