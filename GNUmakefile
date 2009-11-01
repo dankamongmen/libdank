@@ -56,6 +56,7 @@ OBJOUT:=$(OUT)/obj
 ERSATZ:=$(OUT)/ersatz
 
 # Versioning code, which relies in part on svnversion(1)'s output
+# FIXME we're no longer in svn!
 SVNURI:=svn+ssh://svn.research.sys/svn/libdank
 SVNREVISION:=$(shell svnversion . $(SVNURI) | tr ":" "_")
 VERSIONSRC:=$(LIBDIR)/version.c
@@ -340,7 +341,7 @@ $(TAGS): $(MAKEFILE_LIST) $(SRC) $(INC)
 	$(TAGBIN) -f $@ $^
 
 clean:
-	@svn --xml --no-ignore status | $(XMLBIN) sel -t -m //entry -i "wc-status[@item='ignored']" -v @path -n | grep -v $(TAGS) | xargs rm -vrf
+	@rm -vfr $(OUT)
 
 mrproper: clean
 	@rm -vf $(TAGS)
