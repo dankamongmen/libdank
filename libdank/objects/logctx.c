@@ -89,6 +89,15 @@ void init_private_logctx(logctx *lc){
 	set_logctx_tsd(lc);
 }
 
+const char *logctx_strerror_r(int err){
+	logctx *lctx;
+	
+	if((lctx = get_thread_logctx()) == NULL){
+		return "";
+	}
+	return strerror_r(err,lctx->strerrbuf,sizeof(lctx->strerrbuf));
+}
+
 // intitialize a logctx with the provided flags, NULL out/err ustrings,
 // and an attempt at a thread-specific logfile. this is suitable for a
 // thread or anywhere that a precreated lc is not available, but

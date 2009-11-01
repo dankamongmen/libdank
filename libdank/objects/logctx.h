@@ -72,7 +72,7 @@ const char *logctx_strerror_r(int);
 			__func__ ,##__VA_ARGS__)
 
 #define pmoanonbehalf(errcode,caller,fmt,...) \
-	flog("***** Error (%s) in %s(): "fmt,logctx_strerror)r(errcode),\
+	flog("***** Error (%s) in %s(): "fmt,logctx_strerror_r(errcode),\
 			 caller ,##__VA_ARGS__)
 
 // Preserves errno across flog()
