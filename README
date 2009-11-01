@@ -1,0 +1,114 @@
+For more detailed documentation and licensing material, consult the doc/
+directory within the toplevel.
+
+System Requirements
+===================
+
+libdank supports the amd64 (both 64- and 32-bit mode) and i386 architectures.
+For i386, only processors supporting the CPUID instruction are supported;
+processors lacking this instruction should be detected by libdank, but
+obviously it has not been tested on all the world's Intel clones. Any Pentium
+or better should be just fine. Hardware performance counters must be enabled
+and supported by the operating system for libdank's profiling code to operate
+(this requires the hwpmc kernel module and libraries on FreeBSD. Linux is not
+yet supported, but I plan to support it soon via libpfm).
+
+libdank makes extensive use of GCC-specific constructs, and closely tracks GCC
+development. Currently, it requires GCC version 4.3.1 or newer [0]; the gcc
+supplied as default within Debian Unstable at any given time should suffice.
+GNU's libc (glibc) and FreeBSD libc are similarly closely tracked, and libdank
+makes free use of their features; currently, glibc 2.7 and FreeBSD 6.3-p2 are
+the minimum supported C libraries. Versions of glibc using the LinuxThreads
+threading package are known to fail; the NPTL implementation must be used with
+libdank (and is recommended in general). On FreeBSD, the default libpthread
+thread implementation is known to fail; the libthr implementation must be used
+with libdank (and is recommended in general). Linux versions older than 2.6.23
+are not supported (RedHat users note that RedHat kernels typically backport
+many features and bugfixes from current kernels; your mileage may vary), nor
+are FreeBSD versions older than 6.2. In either case, it is recommended that the
+most recent stable update (a.b-pX for FreeBSD, a.b.c.X for Linux) be used.
+
+Libxml2 is required, with a minimum version of 2.6.32. It is necessary that
+libxml2 be built with threading support; on FreeBSD, this currently requires
+the rather ominously-named Make variable "WITH_THREADS_BREAK=yes" be set.
+
+OpenSSL is required, with a minimum version of 0.9.8k. It is necessary that
+libssl and libcrypto be built with threading support (see threads(3SSL)).
+Currently, only systems providing a /dev/urandom device are supported (see
+RAND_add(3SSL)).
+
+Libadns is required, with no known minimum version (testing has been performed
+against 1.4).
+
+Ncurses is required, with no known minimum version (testing has been performed
+against 5.7).
+
+pkgconfig is required, with no known minimum version (testing has been
+performed against 0.22).
+
+To properly build a Vim-compatible tagfile, the exuberant-ctags package (no
+known minimum version; testing has been performed with 5.7 and 5.8) is
+required; default ctags implementations (on at least FreeBSD) will throw
+warnings during the tag-building step. If you do not intend to hack on libdank,
+don't worry about these warnings.
+
+libdank has not been tested on operating systems besides FreeBSD and Linux; any
+new OS will require at least some small tweaking (and a compat-uname header
+within libdank/), but it shouldn't be too difficult to port.
+
+[0] Building with gcc variants less than 4.3 is not advised, but can be
+accomplished. Define the MARCH and MTUNE environment variables correctly for
+your environment (see the gcc info pages) and gcc version, either via shell
+exports or the make command line.
+
+Compiling
+=========
+
+On Linux, run "make". On FreeBSD, run "gmake", or use the libdank Port in
+conjunction with the Port system. libdank's build process will generate
+binaries tightly tied to the architecture on which it runs; for this reason, do
+not distribute libdank packages across CPU manufacturer or model differences.
+The code might appear to run, but is almost certainly suboptimal and likely
+contains all kinds of subtle errors. In the future, libdank's CPU-detection
+code might be able to detect such a mismatch; for now, you're advised to build
+libdank on each machine using it. If you must distribute the binary, predefine
+MARCH to be the value "generic", and do not predefine MTUNE.
+
+Installing
+==========
+
+On Linux, run "make install". On FreeBSD, run "gmake install", or use the
+libdank Port in conjunction with the Port system. The environment variable
+PREFIX may be set to influence installation; /usr/local is the default target.
+
+Testing
+=======
+
+libdank builds and installs the "cunit" unit-testing application, along with
+several dozen builtin tests. Running "cunit -a" will verify all of these tests
+result in the expected behavior. If "cunit -a" does not return 0, the libdank
+build/installation ought be considered broken, and mustn't be used!
+
+Any package of libdank generated for installation on multiple machines ought
+run cunit -a on each host. This does not guarantee that libdank will function
+as expected on the host, but will at least catch some possible issues. See
+"Compiling" for more information about packaging libdank.
+
+Using it
+========
+
+libdank.so must be linked into your application at build or runtime, of course.
+The "pkg-config" system can be used within your Makefiles to determine the
+necessary CFLAGS and LFLAGS to use with libdank (see pkg-config(1)).
+
+In addition, libdank provides several utility programs:
+
+ - daemonizer, to manage execution of arbitrary programs
+ - crosier, to communicate with libdank ctlserver applications
+ - cunit, to test the local libdank installation (see "Testing")
+
+Feedback
+========
+
+Mail bugs or questions to Nick Black <dank@qemfd.net>, or use the Bugzilla
+installation at http://dank.qemfd.net/bugzilla.
