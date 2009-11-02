@@ -38,14 +38,12 @@ extern const declared_test PROCFS_TESTS[];
 extern const declared_test CRLFREADER_TESTS[];
 extern const declared_test CTLSERVER_TESTS[];
 extern const declared_test HEALTH_TESTS[];
-extern const declared_test DNS_TESTS[];
 extern const declared_test RFC2396_TESTS[];
 extern const declared_test RFC3330_TESTS[];
 extern const declared_test LRUPAT_TESTS[];
 extern const declared_test NETLINK_TESTS[];
 extern const declared_test HEX_TESTS[];
 extern const declared_test DLSYM_TESTS[];
-extern const declared_test SSL_TESTS[];
 extern const declared_test INTERVAL_TREE_TESTS[];
 
 int ctlclient_quiet(const char *cmd);

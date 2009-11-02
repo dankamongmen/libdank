@@ -161,10 +161,8 @@ FFLAGS+=-O2 -fomit-frame-pointer -finline-functions -fdiagnostics-show-option \
 
 XML_IFLAGS:=$(shell xml2-config --cflags)
 SSL_IFLAGS:=$(shell pkg-config --cflags openssl)
-ADNS_IFLAGS:=
 XML_LFLAGS:=$(shell xml2-config --libs)
 SSL_LFLAGS:=$(shell pkg-config --libs openssl)
-ADNS_LFLAGS:=-ladns
 CURSES_LFLAGS:=-lncurses
 DANK_LFLAGS:=-Wl,-R$(LIBOUT) -L$(LIBOUT) -ldank
 
