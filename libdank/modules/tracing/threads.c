@@ -136,28 +136,12 @@ get_thread_stack(stack_t *ss){
 	ucontext_t uctx;
 
 	memset(ss,0,sizeof(*ss));
-	// pthread_attr_getstack() and pthread_attr_getstackaddr() only work if
-	// you used set_stack() or set_stackaddr() prior to creating the
-	// thread...FIXME what, really? highly dubious --nlb
-	/* if(pthread_attr_init(&attr)){
-		moan("Couldn't initialize pthread_attr at %p\n",&attr);
-		return -1;
-	}
-	if(pthread_attr_getstacksize(&attr,&ss->ss_size)){
-		moan("Couldn't get stack size using %p\n",&attr);
-		return -1;
-	}
-	if(pthread_attr_destroy(&attr)){
-		moan("Couldn't destroy pthread_attr at %p\n",&attr);
-		return -1;
-	}
-	// hack! sw is the first thing defined on thread stack
-	ss->ss_sp = (void *)sw;
-	nag("stack: %p size: %zu\n",ss->ss_sp,ss->ss_size); */
-	// If SS_DISABLE, the values seem to always be 0/NULL, see above...FIXME
+	// If SS_DISABLE, the values seem to always be 0/NULL...FIXME
 	if(Sigaltstack(NULL,ss) == 0 && !(ss->ss_flags & SS_DISABLE)){
 		return 0;
 	}
+	// getcontext() has been deprecated by POSIX.1-2008. Use
+	// pthread_attr_getstack*() instead FIXME.
 	if(getcontext(&uctx)){
 		moan("Couldn't get user context\n");
 		return -1;
