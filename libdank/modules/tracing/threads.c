@@ -68,6 +68,9 @@ static int
 register_thread_stack(stack_t *ss,stack_wrapper *sw){
 	thread_stack *ts;
 
+	if(ss->ss_size == 0){
+		ss->ss_size = PTHREAD_STACK_MIN;
+	}
 	nag("Signals use %s %zub stack\n",ss->ss_flags & SS_DISABLE ?
 			"default" : "alternate",ss->ss_size);
 	if((ts = Malloc("thread stack entry",sizeof(*ts))) == NULL){
