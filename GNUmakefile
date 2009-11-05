@@ -125,13 +125,14 @@ CUNITEXOBJS:=$(addprefix $(OBJOUT)/,$(CUNITEXSRC:%.c=%.o))
 #  -Wconversion (BSD headers choke for mode_t auuuuugh)
 #  -Wpadded (lib/utils/rfc2396.h)
 # -Wflags we can't use due to bugs in our code FIXME:
-#  -Wstrict-aliasing=2 -Wstrict-overflow=5 -Wunsafe-loop-optimizations
+#  -Wstrict-overflow=5 -Wunsafe-loop-optimizations
 WFLAGS+=-Werror -Wall -W -Wextra -Wmissing-prototypes -Wundef -Wshadow \
 	-Wstrict-prototypes -Wmissing-declarations -Wnested-externs \
 	-Wsign-compare -Wpointer-arith -Wbad-function-cast -Wcast-qual \
 	-Wdeclaration-after-statement -Wfloat-equal -Wpacked -Winvalid-pch \
 	-Wdisabled-optimization -Wcast-align -Wformat -Wformat-security \
-	-Wold-style-definition -Woverlength-strings -Wwrite-strings
+	-Wold-style-definition -Woverlength-strings -Wwrite-strings \
+	-Wstrict-aliasing=3
 LFLAGS+=-Wl,--warn-common -Wl,--as-needed
 IFLAGS+=-I$(APPSRCDIR) -I.
 
