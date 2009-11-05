@@ -15,11 +15,6 @@ struct evectors;
 typedef struct evhandler {
 	pthread_mutex_t lock;
 	pthread_cond_t cond;
-	// This is set to 1 by a thread about to actively wait on the event
-	// notification fd. Once done waiting, it reacquires the lock and sets
-	// this to 0. FIXME why not just hold the lock throughout wait, thus
-	// only acquiring and releasing it once?
-	unsigned usinghandler;
 	int fd;
 	struct evsource *fdarray,*sigarray;
 	// These are ints to facilitate their regular comparison to other ints

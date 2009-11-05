@@ -202,7 +202,6 @@ initialize_evhandler(evhandler *e,int fd){
 		goto lockerr;
 	}
 	e->threadlist = NULL;
-	e->usinghandler = 0;
 	e->fd = fd;
 	e->fdarraysize = determine_max_fds();
 	if((e->fdarray = create_evsources(e->fdarraysize)) == NULL){
@@ -465,18 +464,8 @@ evmain(void *unsafe_emarshal){
 	while(1){
 		int events;
 
-		PTHREAD_PUSH(&eh->lock,cleanup_mutex);
-		while(eh->usinghandler){
-			pthread_cond_wait(&eh->cond,&eh->lock);
-		}
-		++eh->usinghandler;
-		PTHREAD_POP();
 		events = Kevent(eh->fd,PTR_TO_CHANGEV(ev),ev->changesqueued,
 				PTR_TO_EVENTV(ev),ev->vsizes,NULL);
-		pthread_mutex_lock(&eh->lock);
-		--eh->usinghandler;
-		pthread_mutex_unlock(&eh->lock);
-		pthread_cond_signal(&eh->cond);
 		// FIXME when we get an error from Kevent, we need very precise
 		// semantics...maybe changesqueued ought be a value-result...?
 		// and how, precisely, ought we handle unrestartable errors?
