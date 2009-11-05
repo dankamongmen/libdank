@@ -36,13 +36,13 @@ typedef struct evectors {
 } evectors;
 
 #ifdef LIB_COMPAT_LINUX
-#define PTR_TO_EVENTV(ev) (&ev->eventv)
-#define PTR_TO_CHANGEV(ev) (&ev->changev)
+#define PTR_TO_EVENTV(ev) (&(ev)->eventv)
+#define PTR_TO_CHANGEV(ev) (&(ev)->changev)
 typedef struct epoll_event kevententry;
 #define KEVENTENTRY_FD(kptr) ((k)->data.fd)
 #else
-#define PTR_TO_EVENTV(ev) (ev->eventv)
-#define PTR_TO_CHANGEV(ev) (ev->changev)
+#define PTR_TO_EVENTV(ev) ((ev)->eventv)
+#define PTR_TO_CHANGEV(ev) ((ev)->changev)
 typedef struct kevent kevententry;
 #define KEVENTENTRY_FD(kptr) ((int)(k)->ident)
 #define KEVENTENTRY_SIG(kptr) ((int)(k)->ident) // Doesn't exist on Linux
