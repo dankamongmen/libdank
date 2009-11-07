@@ -162,6 +162,8 @@ FFLAGS+=-O2 -fomit-frame-pointer -finline-functions -fdiagnostics-show-option \
 
 XML_IFLAGS:=$(shell xml2-config --cflags)
 XML_LFLAGS:=$(shell xml2-config --libs)
+TORQUE_IFLAGS:=$(shell pkg-config --cflags libtorque)
+TORQUE_LFLAGS:=$(shell (pkg-config --libs libtorque || echo -ltorque))
 CURSES_LFLAGS:=-lncurses
 DANK_LFLAGS:=-Wl,-R$(LIBOUT) -L$(LIBOUT) -ldank
 
@@ -176,8 +178,10 @@ endif
 endif
 
 LFLAGS+=-Wl,--enable-new-dtags
-PTHREAD_CFLAGS:=-std=gnu99 $(PTHREAD_DFLAGS) $(PTHREAD_IFLAGS) $(XML_IFLAGS) $(FFLAGS) $(MFLAGS) $(WFLAGS)
-CFLAGS:=-std=gnu99 $(PTHREAD_DFLAGS) $(XML_IFLAGS) $(FFLAGS) $(MFLAGS) $(WFLAGS)
+PTHREAD_CFLAGS:=-std=gnu99 $(PTHREAD_DFLAGS) $(PTHREAD_IFLAGS) $(XML_IFLAGS) \
+	$(TORQUE_IFLAGS) $(FFLAGS) $(MFLAGS) $(WFLAGS)
+CFLAGS:=-std=gnu99 $(PTHREAD_DFLAGS) $(XML_IFLAGS) $(TORQUE_IFLAGS) $(FFLAGS) \
+	$(MFLAGS) $(WFLAGS)
 
 all: default
 
@@ -264,7 +268,7 @@ $(LIBOUT)/cunit-example.so.0: $(CUNITEXOBJS)
 	$(CC) $(CUNITEX_CFLAGS) -o $@ $(CUNITEXOBJS) $(CUNITEX_LFLAGS)
 
 LIBDANK_CFLAGS:=$(PTHREAD_CFLAGS) -shared
-LIBDANK_LFLAGS:=$(LFLAGS) $(CURSES_LFLAGS) $(SHM_LFLAGS) $(XML_LFLAGS) $(PMC_LFLAGS) $(PTHREAD_LFLAGS)
+LIBDANK_LFLAGS:=$(LFLAGS) $(CURSES_LFLAGS) $(SHM_LFLAGS) $(XML_LFLAGS) $(TORQUE_LFLAGS) $(PMC_LFLAGS) $(PTHREAD_LFLAGS)
 $(LIBOUT)/libdank.so.0: $(LIBDANKOBJS)
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(CC) $(LIBDANK_CFLAGS) -o $@ $(LIBDANKOBJS) $(LIBDANK_LFLAGS)
