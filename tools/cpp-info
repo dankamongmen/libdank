@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+set -o nounset
+
+dumpit () {
+	echo "Now $*"
+	$*
+	echo
+}
+
+tmp="`mktemp \`basename $0\`.XXXX`"
+mv "$tmp" "$tmp.c"
+tmp="$tmp.c"
+
+CMD="gcc -E -Xpreprocessor -dM $tmp"
+dumpit $CMD || rm "$tmp"
+
+CMD="gcc -E -pthread -Xpreprocessor -dM $tmp"
+dumpit $CMD || rm "$tmp"
+
+rm "$tmp"
