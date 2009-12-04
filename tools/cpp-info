@@ -3,11 +3,20 @@
 set -e
 set -o nounset
 
+# FIXME: allow options to be specified, and print the difference in what's
+# defined using them to invoke gcc and the default
+
 dumpit () {
 	echo "Now $*"
 	$*
 	echo
 }
+
+#dumpdiff () {
+#	local tmp1="`mktemp \`basename $0\`.XXXX`"
+#	local tmp2="`mktemp \`basename $0\`.XXXX`"
+#	rm "$tmp1" "$tmp2"
+#}
 
 tmp="`mktemp \`basename $0\`.XXXX`"
 mv "$tmp" "$tmp.c"
