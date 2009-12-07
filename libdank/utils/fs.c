@@ -6,7 +6,9 @@
 #include <sys/statfs.h>
 #include <linux/magic.h>
 #ifdef HUGETLBFS_MAGIC
+#if HUGETLBFS_MAGIC != 0x958458f6
 #error "HUGETLBFS_MAGIC found! Remove the hardcoded entry in this file."
+#endif
 #else
 // FIXME my patch to export this has been merged into Linux 2.6.31; we'll
 // remove this code shortly (http://lkml.org/lkml/2009/6/29/523)
