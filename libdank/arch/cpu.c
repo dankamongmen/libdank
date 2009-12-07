@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <pthread.h>
-#include <libtorque.h>
 #include <libdank/arch/cpu.h>
+#include <libtorque/libtorque.h>
 #include <libdank/arch/cpucount.h>
 #include <libdank/objects/logctx.h>
 
