@@ -3,7 +3,7 @@ SHELL=bash
 
 .DELETE_ON_ERROR:
 
-.PHONY: all install uninstall deinstall default build test fulltest updateport clean mrproper FORCE
+.PHONY: all install uninstall deinstall default build test fulltest updateport clean mrproper
 
 XMLBIN:=$(shell which xmlstarlet 2> /dev/null || which xml 2> /dev/null || echo xml)
 TAGBIN:=$(shell which exctags 2> /dev/null || which ctags 2> /dev/null || echo ctags)
