@@ -24,7 +24,7 @@ echo -e '#include <stdio.h>\nchar*f="char*f=%c%s%c;main(){printf(f,34,f,34,10);}
  | tee $TMPCODE
 
 # Find out what all's getting defined at the preprocessor level
-"$GCC" "$@" -E -v "$TMPCODE"
+"$GCC" "$@" -E -dM -v "$TMPCODE"
 
 # The -Q trick is only supported on older gcc's
 for i in 0 1 2 3 s ; do
