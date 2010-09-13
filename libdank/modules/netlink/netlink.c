@@ -423,7 +423,7 @@ static int
 decode_getroute_msg(struct nlmsghdr *nlh,size_t len,pid_t pid){
 	int parts = 0;
 
-	while(NLMSG_OK(nlh,len)){
+	for( ; NLMSG_OK(nlh,len) ; nlh = NLMSG_NEXT(nlh,len)){
 		struct rtattr *tb[RTA_MAX + 1]; // see leading comment
 		struct rtmsg *r;
 
@@ -457,15 +457,14 @@ decode_getroute_msg(struct nlmsghdr *nlh,size_t len,pid_t pid){
 			return -1;
 		}
 		if(tb[RTA_OIF] == NULL){
-			bitch("Malformed RTM_NEWROUTE message (no interface)\n");
-			return -1;
+			nag("Global RTM_NEWROUTE message (no interface)\n");
+			continue;
 		}
 		if(add_route(r,tb[RTA_DST] ? RTA_DATA(tb[RTA_DST]) : NULL,
 				tb[RTA_SRC] ? RTA_DATA(tb[RTA_SRC]) : NULL,
 				*(int *)RTA_DATA(tb[RTA_OIF]))){
 			return -1;
 		}
-		nlh = NLMSG_NEXT(nlh,len);
 	}
 	if(len){
 		bitch("Exceeded netlink message by %zu\n",len);
