@@ -5,7 +5,7 @@
 
 // Syntax minutae require keeping these three lines distinct!
 const char LIBDANK_REVISION[] =
-	#include <libdank/ersatz/svnrev.h>
+	#include <libdank/ersatz/ersatz/svnrev.h>
 ;
 
 const char Libdank_Version[] = VERSION;

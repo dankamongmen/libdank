@@ -55,10 +55,8 @@ DEPOUT:=$(OUT)/dep
 OBJOUT:=$(OUT)/obj
 ERSATZ:=$(OUT)/ersatz
 
-# Versioning code, which relies in part on svnversion(1)'s output
-# FIXME we're no longer in svn!
-SVNURI:=svn+ssh://svn.research.sys/svn/libdank
-SVNREVISION:=$(shell svnversion . $(SVNURI) | tr ":" "_")
+# Versioning code, which relies in part on git-rev-parse(1)'s output
+SVNREVISION:=$(shell git rev-parse HEAD)
 VERSIONSRC:=$(LIBDIR)/version.c
 PROD_VER:=1.3.0-pre0
 
@@ -320,7 +318,7 @@ $(ERSATZ)/magictables.h: $(TOOLDIR)/magictables $(LIBDIR)/ersatz
 	$< > $@
 
 $(LIBDIR)/ersatz: $(ERSATZ)
-	ln -sf ../$< $@
+	ln -sf ../../$< $@
 
 TEST_DATA:=testing
 # MALLOC_CHECK_ is a glibc memory checking technique; see 3.2.2.9 "Heap
