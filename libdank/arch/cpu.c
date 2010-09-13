@@ -2,7 +2,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <libdank/arch/cpu.h>
-#include <libtorque/libtorque.h>
+#include <libtorque/torque.h>
 #include <libdank/arch/cpucount.h>
 #include <libdank/objects/logctx.h>
 
@@ -15,13 +15,14 @@ get_l1_dline(unsigned *lsize){
 
 	pthread_mutex_lock(&cpuid_lock);
 	if(L1_DLINE_SIZE == 0){
-		struct libtorque_ctx *torctx;
+		struct torque_ctx *torctx;
+		torque_err err;
 
-		if((torctx = libtorque_init()) == NULL){
+		if((torctx = torque_init(&err)) == NULL){
 			ret = -1;
 		}else{
 			L1_DLINE_SIZE = 64; //FIXME extract real L1 dcache lsize
-			if(libtorque_stop(torctx)){
+			if(torque_stop(torctx)){
 				ret = -1;
 			}
 		}
