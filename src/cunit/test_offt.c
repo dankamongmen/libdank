@@ -8,7 +8,7 @@ static int
 test_offset64(void){
 	struct stat sta;
 	int fd,ret = -1;
-	off_t off;
+	// FIXME off_t off;
 
 	if((fd = OpenCreat(TESTFILE,O_RDWR | O_CREAT,755)) < 0){
 		goto done;
@@ -16,7 +16,8 @@ test_offset64(void){
 	if(Fstat(fd,&sta)){
 		goto done;
 	}
-	off = 0x1ffffffffLL;
+	// FIXME what is to be done with this?
+	//off = 0x1ffffffffLL;
 	ret = 0;
 
 done:
