@@ -20,10 +20,13 @@ endif
 
 ifeq ($(shell uname),Linux)
 READLINK:=readlink -f
-LFLAGS+=-Wl,-O,--warn-shared-textrel,--default-symver
+# --default-symver is unknown to gold
+LFLAGS+=-Wl,--warn-shared-textrel,-O2
 DFLAGS+=-D_FILE_OFFSET_BITS=64
 DFLAGS+=-D_FORTIFY_SOURCE=2 -D_GNU_SOURCE
 SHM_LFLAGS:=-lrt
+DL_LFLAGS:=-ldl
+MATH_LFLAGS:=-lm
 PTHREAD_DFLAGS:=-pthread
 PTHREAD_LFLAGS:=-lpthread
 else
@@ -246,7 +249,7 @@ $(BINOUT)/$(DAEMONIZER): $(LIB) $(DAEMONIZEROBJS)
 	$(CC) $(DAEMONIZER_CFLAGS) -o $@ $(DAEMONIZEROBJS) $(DAEMONIZER_LFLAGS)
 
 CUNIT_CFLAGS:=$(CFLAGS)
-CUNIT_LFLAGS:=$(LFLAGS) $(XML_LFLAGS) $(DANK_LFLAGS) $(PTHREAD_LFLAGS)
+CUNIT_LFLAGS:=$(LFLAGS) $(MATH_LFLAGS) $(DL_LFLAGS) $(XML_LFLAGS) $(DANK_LFLAGS) $(PTHREAD_LFLAGS)
 $(BINOUT)/$(CUNIT): $(CUNITOBJS)
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(CC) $(CUNIT_CFLAGS) -o $@ $(CUNITOBJS) $(CUNIT_LFLAGS)
