@@ -251,12 +251,15 @@ evhandler *create_evhandler(int flags){
 		if(flags & LIBDANK_FD_CLOEXEC){
 			trueflags |= EPOLL_CLOEXEC;
 		}
-		if(flags & LIBDANK_FD_NONBLOCK){
-			trueflags |= EPOLL_NONBLOCK;
-		}
 		if((fd = epoll_create1(trueflags)) < 0){
 			moan("Couldn't create epoll fd with flags %x\n",trueflags);
 			return NULL;
+		}
+		if(flags & LIBDANK_FD_NONBLOCK){
+			if(set_fd_nonblocking(fd)){
+				Close(fd);
+				return NULL;
+			}
 		}
 	}
 #else
@@ -271,7 +274,6 @@ evhandler *create_evhandler(int flags){
 		}
 	}
 	if(flags & LIBDANK_FD_NONBLOCK){
-		nag("Emulating EPOLL_NONBLOCK\n");
 		if(set_fd_nonblocking(fd)){
 			Close(fd);
 			return NULL;
