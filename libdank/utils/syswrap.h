@@ -161,8 +161,11 @@ static inline rettype libdank_##fxn##_wrapper(const char *caller,argtype aleph,\
 	if((ret = fxn(aleph,bet,gamel)) pred){ moanonbehalf(caller,errfmtstr "\n" ,##__VA_ARGS__); } \
 	return ret; }
 
+/*
+// readdir_r() is deprecated in glibc, and expected to be removed from POSIX.
 THREEARG_WRAPPER(readdir_r,DIR *,struct dirent *,struct dirent **,int,,"Error reading directory")
 #define Readdir_r(dir) libdank_readdir_r_wrapper(__func__,dir)
+*/
 
 #define ZEROARG_WRAPPER(fxn,rettype,pred,errfmtstr,...) \
 static inline rettype libdank_##fxn##_wrapper(const char *caller){ \
