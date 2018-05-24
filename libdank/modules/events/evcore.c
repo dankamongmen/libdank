@@ -418,7 +418,7 @@ static void
 handle_events(int events,evhandler *eh,evectors *ev){
 	while(events--){
 		const kevententry *k = nth_kevent(ev,events);
-		int ret;
+		int ret = 0;
 
 		// In Linux, everything is a file descriptor. Not so on
 		// FreeBSD, where we first must determine the event filter in
@@ -435,11 +435,8 @@ handle_events(int events,evhandler *eh,evectors *ev){
 			ret = handle_evfilt_timer(k);
 		}else{
 			bitch("Unknown filter: %hd\n",k->filter);
-			ret = 0;
 		}
 #else
-		ret = 0;
-
 		// Unlike FreeBSD, we can have multiple events per kevententry
 		// using epoll. We want to stop processing on a non-zero
 		// return, but otherwise handle each...
@@ -447,7 +444,6 @@ handle_events(int events,evhandler *eh,evectors *ev){
 		}else if((k->events & EPOLLOUT) && (ret = handle_write_event(k)) ){
 		}else if(ret){
 			bitch("Unknown events: %ju\n",(uintmax_t)k->events);
-			ret = 0;
 		}
 #endif
 		// FIXME handle a non-zero ret (close the fd)
