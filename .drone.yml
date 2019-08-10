@@ -7,6 +7,5 @@ pipeline:
       - apt-get -y install devscripts git-buildpackage
       - mk-build-deps --install -t'apt-get -y'
       - autoreconf -fis
-      - ./configure
       - make -j8
-      - make check
+      - make test
