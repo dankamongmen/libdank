@@ -972,7 +972,6 @@ int ip_is_local(uint32_t ip){
 // FIXME we should work with generic struct sockaddr objects -- all the pieces
 // 	are here (dynamic lengths, etc), we just need per-AF downcalls
 int setup_sockaddr_ll(const struct sockaddr_in *sina,struct sockaddr_ll *sll){
-	uint32_t ip = ntohl(sina->sin_addr.s_addr);
 	typeof(*nics) *n;
 	int ret = -1;
 
@@ -981,7 +980,7 @@ int setup_sockaddr_ll(const struct sockaddr_in *sina,struct sockaddr_ll *sll){
 		typeof(*n->neighbors) *nb;
 
 		for(nb = n->neighbors ; nb ; nb = nb->next){
-			if(nb->netlen != sizeof(ip)){
+			if(nb->netlen != 4){
 				continue;
 			}
 			if(memcmp(&nb->netdst,&sina->sin_addr.s_addr,nb->netlen)){
