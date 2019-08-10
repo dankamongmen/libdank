@@ -279,6 +279,7 @@ int main(int argc,char **argv){
 			break;
 		case '?':
 			bitch("Unknown parameter: %c\n",optopt);
+			/* fall through */
 		default:
 			usage(argv[0],EXIT_FAILURE);
 		}
