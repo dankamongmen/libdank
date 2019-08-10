@@ -14,8 +14,6 @@
 #include <libdank/modules/tracing/threads.h>
 #include <libdank/modules/ctlserver/ctlserver.h>
 
-static const char DRONE_NAME[] = "drone-ctlserv";
-
 typedef struct export_cmd {
 	unsigned refcount;
 	const command *cmd;
