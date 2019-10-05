@@ -9,7 +9,7 @@ pipeline:
       - apt-add-repository 'deb https://www.dsscaw.com/repos/apt/debian unstable main'
       - wget -qO- https://www.dsscaw.com/repos/9EA957D484A4266A.asc | apt-key add -
       - apt-get update
-      - apt-get -y install devscripts git-buildpackage libtorque1 libtorque-dev
+      - apt-get -y install devscripts git-buildpackage
       - mk-build-deps --install -t'apt-get -y'
       - make -j8
       - make test
