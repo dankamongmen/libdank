@@ -2,7 +2,7 @@ Source: libdank
 Priority: optional
 Maintainer: nick black <dankamongmen@gmail.com>
 Build-Depends: debhelper-compat (>= 12), libtorque-dev, libxml2-dev,
- pkg-config, bc, ctags
+ pkg-config (>= 0.22), bc, ctags, libncurses-dev (>= 5.7)
 Standards-Version: 4.4.1.1
 Section: libs
 Homepage: https://nick-black.com/dankwiki/index.php/Libdank
