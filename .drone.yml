@@ -4,9 +4,7 @@ pipeline:
     commands: 
       # need non-free for CUDA dep of libtorque
       - echo 'deb http://ftp.us.debian.org/debian/ unstable main non-free contrib' > /etc/apt/sources.list
-      - apt-get update
-      - apt-get -y install devscripts git-buildpackage software-properties-common
-      - apt-add-repository 'deb https://www.dsscaw.com/repos/apt/debian unstable main'
+      - echo 'deb https://www.dsscaw.com/repos/apt/debian unstable main' >> /etc/apt/sources.list
       - wget -qO- https://www.dsscaw.com/repos/9EA957D484A4266A.asc | apt-key add -
       - apt-get update
       - apt-get -y install devscripts git-buildpackage
