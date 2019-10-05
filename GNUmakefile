@@ -156,7 +156,7 @@ IFLAGS+=-I$(APPSRCDIR) -I.
 # -ftree-pre -ftree-vrp 
 
 FFLAGS+=-O2 -fomit-frame-pointer -finline-functions -fdiagnostics-show-option \
-	-pipe -rdynamic -fpic -funsafe-loop-optimizations
+	-pipe -rdynamic -fpic
 
 # Debugging fflags
 #FFLAGS+=-g -ggdb -fmudflapth
@@ -329,6 +329,7 @@ TEST_DATA:=testing
 test: build
 	$(BINOUT)/$(DAEMONIZER) -u $(USER) -p $(TEST_DATA)/daemonizerlock -- /bin/echo erp
 	$(BINOUT)/$(DAEMONIZER) -u $(USER) -r 2 -L 1 -- /bin/echo erp -n
+	# turned off until libtorque stops locking up :/
 	$(BINOUT)/$(LOGDEMO)
 	$(BINOUT)/$(LOGDEMO) -v
 	env MALLOC_CHECK_=2 $(BINOUT)/$(CUNIT) -o $(LIBOUT)/$(CUNIT)-example.so -c $(TEST_DATA) -a

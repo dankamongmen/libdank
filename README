@@ -37,9 +37,6 @@ libssl and libcrypto be built with threading support (see threads(3SSL)).
 Currently, only systems providing a /dev/urandom device are supported (see
 RAND_add(3SSL)).
 
-Libadns is required, with no known minimum version (testing has been performed
-against 1.4).
-
 Ncurses is required, with no known minimum version (testing has been performed
 against 5.7).
 
