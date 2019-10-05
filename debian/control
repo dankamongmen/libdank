@@ -1,7 +1,8 @@
 Source: libdank
 Priority: optional
 Maintainer: nick black <dankamongmen@gmail.com>
-Build-Depends: debhelper (>= 12), libtorque-dev, libxml2-dev, pkg-config, bc
+Build-Depends: debhelper-compat (>= 12), libtorque-dev, libxml2-dev,
+ pkg-config, bc, ctags
 Standards-Version: 4.4.1.1
 Section: libs
 Homepage: https://nick-black.com/dankwiki/index.php/Libdank
