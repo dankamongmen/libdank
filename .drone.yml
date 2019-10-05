@@ -12,4 +12,3 @@ pipeline:
       - apt-get update
       - mk-build-deps --install -t'apt-get -y'
       - make -j8
-      - make test
