@@ -156,7 +156,7 @@ IFLAGS+=-I$(APPSRCDIR) -I.
 # -ftree-pre -ftree-vrp 
 
 FFLAGS+=-O2 -fomit-frame-pointer -finline-functions -fdiagnostics-show-option \
-	-pipe -rdynamic -fpic -funsafe-loop-optimizations
+	-pipe -rdynamic -fpic
 
 # Debugging fflags
 #FFLAGS+=-g -ggdb -fmudflapth
