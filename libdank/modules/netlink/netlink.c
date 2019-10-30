@@ -533,7 +533,7 @@ add_nic(const struct ifinfomsg *i,const char *name,unsigned mtu){
 #define NDA_RTA(r) ((struct rtattr*)(((char*)(r)) + NLMSG_ALIGN(sizeof(struct ndmsg))))
 #endif
 #ifndef NDA_PAYLOAD
-#define NDA_PAYLOAD(n)  NLMSG_PAYLOAD(n,sizeof(struct ndmsg))
+#define NDA_PAYLOAD(n) NLMSG_PAYLOAD((n), sizeof(struct ndmsg))
 #endif
 
 static int
